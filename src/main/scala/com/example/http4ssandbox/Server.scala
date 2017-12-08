@@ -11,6 +11,6 @@ object Server extends StreamApp {
   def stream(args: List[String]): fs2.Stream[Task, Nothing] =
     BlazeBuilder
       .bindHttp(port)
-      .mountService(HelloWorld.service, "/")
+      .mountService(Offers.service, "/")
       .serve
 }
