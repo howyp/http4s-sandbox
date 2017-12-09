@@ -1,17 +1,16 @@
 package com.example.http4ssandbox
 
+import com.example.http4ssandbox.test.Http4sMatchers
 import fs2.Task
-import io.circe._
 import io.circe.literal._
-import org.http4s.{Method, _}
-import Method.{GET, POST}
+import org.http4s.Method.{GET, POST}
+import org.http4s._
 import org.http4s.circe._
 import org.http4s.dsl._
 import org.scalatest.OptionValues._
-import org.scalatest.matchers.{HavePropertyMatchResult, HavePropertyMatcher}
 import org.scalatest.{FreeSpec, Matchers}
 
-class OffersSpec extends FreeSpec with Matchers {
+class OffersSpec extends FreeSpec with Matchers with Http4sMatchers {
   "Offers" - {
     "can be created by a merchant" in {
       responseTo(Request(GET, uri("/offers"))) should have(status(Status.Ok), body(json"[]"))
@@ -32,20 +31,7 @@ class OffersSpec extends FreeSpec with Matchers {
       responseTo(Request(GET, uri("/offers"))) should have(status(Status.Ok), body(json"[$originalOffer]"))
     }
   }
+
   def responseTo(request: Request)       = Offers.service.orNotFound(request).unsafeRun()
   def responseTo(request: Task[Request]) = request.flatMap(Offers.service.orNotFound(_)).unsafeRun()
-
-  def status(expected: Status) = HavePropertyMatcher { (response: Response) =>
-    HavePropertyMatchResult(response.status == expected, "status", expected, response.status)
-  }
-  def header(expected: HeaderKey.Extractable) = HavePropertyMatcher { (response: Response) =>
-    HavePropertyMatchResult(response.headers.get(expected).isDefined,
-                            "header keys",
-                            "containing " + expected.name,
-                            response.headers.map(_.name))
-  }
-  def body(expected: Json) = HavePropertyMatcher { (response: Response) =>
-    val actual = response.as[Json].unsafeRun()
-    HavePropertyMatchResult(actual == expected, "body", expected, actual)
-  }
 }
