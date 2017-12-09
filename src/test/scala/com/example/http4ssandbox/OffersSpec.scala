@@ -24,9 +24,8 @@ class OffersSpec extends FreeSpec with Matchers with Http4sMatchers {
     "can be listed" in new TestCase {
       responseTo(Request(GET, uri("/offers"))) should have(status(Status.Ok), body(json"[]"))
 
-      responseTo(Request(POST, uri("/offers")).withBody(offer1)) should have(status(Status.Created))
-      responseTo(Request(POST, uri("/offers")).withBody(offer2)) should have(status(Status.Created))
-      responseTo(Request(POST, uri("/offers")).withBody(offer3)) should have(status(Status.Created))
+      forAll(offers)(offer =>
+        responseTo(Request(POST, uri("/offers")).withBody(offer)) should have(status(Status.Created)))
 
       responseTo(Request(GET, uri("/offers"))) should have(status(Status.Ok), body(json"[$offer1,$offer2,$offer3]"))
     }
