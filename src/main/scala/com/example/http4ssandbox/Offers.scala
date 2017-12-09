@@ -28,12 +28,13 @@ class Offers {
   var currentOffers: IndexedSeq[Offer] = IndexedSeq.empty
 
   val service = HttpService {
-    case GET -> Root / "offers"      => Ok(currentOffers.asJson)
-    case GET -> Root / "offers" / id => Ok(currentOffers.head.asJson)
+    case GET -> Root / "offers"              => Ok(currentOffers.asJson)
+    case GET -> Root / "offers" / IntVar(id) => Ok(currentOffers(id).asJson)
     case req @ POST -> Root / "offers" =>
       req.as(jsonOf[Offer]).flatMap { offer =>
         currentOffers = currentOffers :+ offer
-        Task.now(Response(Created, headers = Headers(headers.Location(uri("/offers/1")))))
+        val id = currentOffers.size - 1
+        Task.now(Response(Created, headers = Headers(headers.Location(uri("/offers") / id.toString))))
       }
   }
 }
