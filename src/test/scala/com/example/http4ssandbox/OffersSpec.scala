@@ -14,16 +14,22 @@ import org.scalatest.{FreeSpec, Matchers}
 class OffersSpec extends FreeSpec with Matchers {
   "Offers" - {
     "can be created by a merchant" in {
-      responseTo(Request(GET, uri("/offers"))) should have(status(Status.Ok), body(json"""[]"""))
+      responseTo(Request(GET, uri("/offers"))) should have(status(Status.Ok), body(json"[]"))
 
-      val postResponse = responseTo(Request(POST, uri("/offers")).withBody(json"""{ "merchantId": 1234 }"""))
+      val originalOffer = json"""
+        {
+          "merchantId": 1234,
+          "price": { "currency": "GBp", "amount": 503762 },
+          "productId": "AM039827X"
+        }
+      """
+      val postResponse  = responseTo(Request(POST, uri("/offers")).withBody(originalOffer))
       postResponse should have(status(Status.Created), header(headers.Location))
 
-      responseTo(Request(GET, postResponse.headers.get(headers.Location).value.uri)) should have(
-        status(Status.Ok),
-        body(json"""{ "merchantId": 1234 }"""))
+      responseTo(Request(GET, postResponse.headers.get(headers.Location).value.uri)) should have(status(Status.Ok),
+                                                                                                 body(originalOffer))
 
-      responseTo(Request(GET, uri("/offers"))) should have(status(Status.Ok), body(json"""[{ "merchantId": 1234 }]"""))
+      responseTo(Request(GET, uri("/offers"))) should have(status(Status.Ok), body(json"[$originalOffer]"))
     }
   }
   def responseTo(request: Request)       = Offers.service.orNotFound(request).unsafeRun()

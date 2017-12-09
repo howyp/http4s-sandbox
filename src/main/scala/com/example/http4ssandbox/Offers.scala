@@ -12,10 +12,15 @@ import org.http4s.server._
 import org.http4s.dsl._
 
 object Offers {
-  case class Offer(merchantId: Long)
+  case class Price(currency: String, amount: Long)
+  case class Offer(merchantId: Long, productId: String, price: Price)
+
+  implicit val priceDecoder: Decoder[Price] = deriveDecoder[Price]
+  implicit val priceEncoder: Encoder[Price] = deriveEncoder[Price]
   implicit val offerDecoder: Decoder[Offer] = deriveDecoder[Offer]
   implicit val offerEncoder: Encoder[Offer] = deriveEncoder[Offer]
-  var currentOffers: IndexedSeq[Offer]      = IndexedSeq.empty
+
+  var currentOffers: IndexedSeq[Offer] = IndexedSeq.empty
 
   val service = HttpService {
     case GET -> Root / "offers"      => Ok(currentOffers.asJson)
