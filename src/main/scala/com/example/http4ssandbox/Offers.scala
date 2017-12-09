@@ -9,10 +9,11 @@ import org.http4s._
 import org.http4s.circe._
 import org.http4s.dsl._
 
-object Offers {
+class Offers {
   sealed trait Currency
   object Currency {
     case object GBP extends Currency
+    case object USD extends Currency
   }
   case class Price(currency: Currency, amount: BigDecimal)
   case class Offer(merchantId: Long, productId: String, price: Price)
@@ -35,4 +36,7 @@ object Offers {
         Task.now(Response(Created, headers = Headers(headers.Location(uri("/offers/1")))))
       }
   }
+}
+object Offers {
+  def service: HttpService = new Offers().service
 }
