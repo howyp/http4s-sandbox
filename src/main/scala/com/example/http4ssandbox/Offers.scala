@@ -10,19 +10,19 @@ import org.http4s.circe._
 import org.http4s.dsl._
 
 object Offers {
-  sealed trait CurrencyAmount
-  object CurrencyAmount {
-    case object GBp extends CurrencyAmount
+  sealed trait Currency
+  object Currency {
+    case object GBP extends Currency
   }
-  case class Price(currency: CurrencyAmount, amount: Long)
+  case class Price(currency: Currency, amount: BigDecimal)
   case class Offer(merchantId: Long, productId: String, price: Price)
 
-  implicit val currencyAmountDecoder: Decoder[CurrencyAmount] = deriveEnumerationDecoder[CurrencyAmount]
-  implicit val currencyAmountEncoder: Encoder[CurrencyAmount] = deriveEnumerationEncoder[CurrencyAmount]
-  implicit val priceDecoder: Decoder[Price]                   = deriveDecoder[Price]
-  implicit val priceEncoder: Encoder[Price]                   = deriveEncoder[Price]
-  implicit val offerDecoder: Decoder[Offer]                   = deriveDecoder[Offer]
-  implicit val offerEncoder: Encoder[Offer]                   = deriveEncoder[Offer]
+  implicit val currencyAmountDecoder: Decoder[Currency] = deriveEnumerationDecoder[Currency]
+  implicit val currencyAmountEncoder: Encoder[Currency] = deriveEnumerationEncoder[Currency]
+  implicit val priceDecoder: Decoder[Price]             = deriveDecoder[Price]
+  implicit val priceEncoder: Encoder[Price]             = deriveEncoder[Price]
+  implicit val offerDecoder: Decoder[Offer]             = deriveDecoder[Offer]
+  implicit val offerEncoder: Encoder[Offer]             = deriveEncoder[Offer]
 
   var currentOffers: IndexedSeq[Offer] = IndexedSeq.empty
 

@@ -18,7 +18,7 @@ class OffersSpec extends FreeSpec with Matchers with Http4sMatchers {
       val originalOffer = json"""
         {
           "merchantId": 1234,
-          "price": { "currency": "GBp", "amount": 503762 },
+          "price": { "currency": "GBP", "amount": 503762 },
           "productId": "AM039827X"
         }
       """
