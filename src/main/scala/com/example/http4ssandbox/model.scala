@@ -4,8 +4,9 @@ import java.time.ZonedDateTime
 
 import io.circe.{Decoder, Encoder}
 import io.circe.java8.time._
-import io.circe.generic.extras.semiauto.{deriveEnumerationDecoder, deriveEnumerationEncoder}
+import io.circe.generic.auto._
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
+import io.circe.generic.extras.semiauto.{deriveEnumerationDecoder, deriveEnumerationEncoder}
 
 sealed trait Currency
 object Currency {
@@ -17,11 +18,6 @@ object Currency {
 }
 
 case class Price(currency: Currency, amount: BigDecimal)
-object Price {
-  implicit val priceDecoder: Decoder[Price] = deriveDecoder[Price]
-  implicit val priceEncoder: Encoder[Price] = deriveEncoder[Price]
-}
-
 case class Offer(merchantId: Long, productId: String, price: Price, expires: ZonedDateTime)
 object Offer {
   implicit val offerDecoder: Decoder[Offer] = deriveDecoder[Offer]
