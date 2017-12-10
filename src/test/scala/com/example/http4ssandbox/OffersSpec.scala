@@ -90,7 +90,7 @@ class OffersSpec extends FreeSpec with Matchers with Http4sMatchers {
       """
     )
 
-    def responseTo(request: Request)       = service.orNotFound(request).unsafeRun()
-    def responseTo(request: Task[Request]) = request.flatMap(service.orNotFound(_)).unsafeRun()
+    def responseTo(request: Request): Response       = service.orNotFound(request).unsafeRun()
+    def responseTo(request: Task[Request]): Response = request.flatMap(service.orNotFound(_)).unsafeRun()
   }
 }

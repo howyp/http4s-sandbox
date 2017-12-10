@@ -14,6 +14,11 @@ class Offers {
   private var nextId                         = 0
   private var currentOffers: Map[Int, Offer] = Map.empty
 
+  private def offerUri(id: Int) = uri("/offers") / id.toString
+  private val offerCollectionItem: ((Int, Offer)) => Json = {
+    case (id, offer) => Json.obj("href" -> offerUri(id).asJson, "item" -> offer.asJson)
+  }
+
   object MerchantId extends QueryParamDecoderMatcher[Long]("merchantId")
 
   val service = HttpService {
@@ -31,11 +36,6 @@ class Offers {
         currentOffers = currentOffers + (id -> offer)
         Task.now(Response(Created, headers = Headers(Location(offerUri(id)))))
       }
-  }
-
-  private def offerUri(id: Int) = uri("/offers") / id.toString
-  private val offerCollectionItem: ((Int, Offer)) => Json = {
-    case (id, offer) => Json.obj("href" -> offerUri(id).asJson, "item" -> offer.asJson)
   }
 }
 object Offers {
