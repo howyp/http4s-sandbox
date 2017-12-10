@@ -23,6 +23,8 @@ class Offers {
   object ProductId  extends QueryParamDecoderMatcher[String]("productId")
 
   val service = HttpService {
+    case GET -> Root / "offers" :? MerchantId(mId) +& ProductId(pId) =>
+      Ok(currentOffers.filter(o => o._2.merchantId === mId && o._2.productId === pId).map(offerCollectionItem).asJson)
     case GET -> Root / "offers" :? MerchantId(mId) =>
       Ok(currentOffers.filter(_._2.merchantId === mId).map(offerCollectionItem).asJson)
     case GET -> Root / "offers" :? ProductId(pId) =>

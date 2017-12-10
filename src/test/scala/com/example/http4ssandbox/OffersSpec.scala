@@ -46,30 +46,26 @@ class OffersSpec extends FreeSpec with Matchers with Http4sMatchers {
       responseTo(Request(GET, uri("/offers"))) should have(status(Status.Ok), body(json"[]"))
     }
     "queried by" - {
-      "merchant ID" in new TestCase {
-        val List(offer1Uri, offer2Uri, offer3Uri) =
-          offers.map(offer => responseTo(Request(POST, uri("/offers")).withBody(offer)).headers.get(Location).value.uri)
+      "merchant ID" in new TestCase with PreCreatedOffers {
         responseTo(Request(GET, uri("/offers") +? ("merchantId", 1234))) should have(
           status(Status.Ok),
-          body(json"""
-          [
-            { "href": $offer1Uri, "item": $offer1 },
-            { "href": $offer3Uri, "item": $offer3 }
-          ]""")
+          body(json""" [ { "href": $offer1Uri, "item": $offer1 }, { "href": $offer3Uri, "item": $offer3 } ]""")
         )
         responseTo(Request(GET, uri("/offers") +? ("merchantId", 99999))) should have(status(Status.Ok),
                                                                                       body(json"""[]"""))
       }
-      "product ID" in new TestCase {
-        val List(offer1Uri, offer2Uri, offer3Uri) =
-          offers.map(offer => responseTo(Request(POST, uri("/offers")).withBody(offer)).headers.get(Location).value.uri)
+      "product ID" in new TestCase with PreCreatedOffers {
         responseTo(Request(GET, uri("/offers") +? ("productId", "BNT93876"))) should have(
           status(Status.Ok),
-          body(json"""
-          [
-            { "href": $offer2Uri, "item": $offer2 },
-            { "href": $offer3Uri, "item": $offer3 }
-          ]""")
+          body(json""" [ { "href": $offer2Uri, "item": $offer2 }, { "href": $offer3Uri, "item": $offer3 } ]""")
+        )
+        responseTo(Request(GET, uri("/offers") +? ("productId", 99999))) should have(status(Status.Ok),
+                                                                                     body(json"""[]"""))
+      }
+      "merchant ID and product ID" in new TestCase with PreCreatedOffers {
+        responseTo(Request(GET, uri("/offers") +? ("merchantId", 1234) +? ("productId", "BNT93876"))) should have(
+          status(Status.Ok),
+          body(json""" [ { "href": $offer3Uri, "item": $offer3 } ]""")
         )
         responseTo(Request(GET, uri("/offers") +? ("productId", 99999))) should have(status(Status.Ok),
                                                                                      body(json"""[]"""))
@@ -106,5 +102,9 @@ class OffersSpec extends FreeSpec with Matchers with Http4sMatchers {
 
     def responseTo(request: Request): Response       = service.orNotFound(request).unsafeRun()
     def responseTo(request: Task[Request]): Response = request.flatMap(service.orNotFound(_)).unsafeRun()
+  }
+  private trait PreCreatedOffers { this: TestCase =>
+    val List(offer1Uri, offer2Uri, offer3Uri) =
+      offers.map(offer => responseTo(Request(POST, uri("/offers")).withBody(offer)).headers.get(Location).value.uri)
   }
 }
