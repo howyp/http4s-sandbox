@@ -1,5 +1,6 @@
 package com.example.http4ssandbox
 
+import java.time.Clock
 import java.util.UUID
 
 import fs2.Task
@@ -12,7 +13,9 @@ import org.http4s.headers.Location
 import cats.syntax.eq._
 import cats.instances.all._
 
-class Offers {
+trait Offers {
+  def clock: Clock
+
   private type OfferId = UUID
   private var currentOffers: Map[OfferId, Offer] = Map.empty
 
@@ -33,7 +36,12 @@ class Offers {
   val service = HttpService {
     case GET -> Root / "offers" :? MerchantId(merchant) +& ProductId(product) =>
       Ok(currentOffers.filter(orderMatches(merchant, product)).map(offerCollectionItem).asJson)
-    case GET -> Root / "offers" / id => currentOffers.get(UUID.fromString(id)).map(o => Ok(o.asJson)).getOrElse(Gone())
+    case GET -> Root / "offers" / id =>
+      currentOffers
+        .get(UUID.fromString(id))
+        .filterNot(_.expires.toInstant isBefore clock.instant())
+        .map(o => Ok(o.asJson))
+        .getOrElse(Gone())
     case DELETE -> Root / "offers" / id =>
       currentOffers = currentOffers - UUID.fromString(id)
       NoContent()
@@ -45,6 +53,6 @@ class Offers {
       }
   }
 }
-object Offers {
-  def service: HttpService = new Offers().service
+object Offers extends Offers {
+  val clock = Clock.systemUTC()
 }

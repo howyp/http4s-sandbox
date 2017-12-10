@@ -17,6 +17,7 @@ libraryDependencies ++= Seq(
   "io.circe"       %% "circe-generic"        % CirceVersion,
   "io.circe"       %% "circe-generic-extras" % CirceVersion,
   "io.circe"       %% "circe-literal"        % CirceVersion,
+  "io.circe"       %% "circe-java8"          % CirceVersion,
   "ch.qos.logback" % "logback-classic"       % LogbackVersion,
   "org.scalatest"  %% "scalatest"            % "3.0.4" % Test,
   "org.scalacheck" %% "scalacheck"           % "1.13.4" % Test

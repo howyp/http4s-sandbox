@@ -1,6 +1,8 @@
 package com.example.http4ssandbox.test
 
 import fs2.Task
+import cats.instances.all._
+import cats.syntax.eq._
 import io.circe.Json
 import org.http4s._
 import org.http4s.circe._
@@ -23,7 +25,7 @@ trait Http4sMatchers {
                                 "body",
                                 expected.toString(),
                                 s"parsing body as JSON threw exception '${throwable.getMessage}'")
-      case Right(actual) => HavePropertyMatchResult(actual == expected, "body", expected.toString(), actual.toString())
+      case Right(actual) => HavePropertyMatchResult(actual === expected, "body", expected.toString(), actual.toString())
     }
   }
   val noBody = HavePropertyMatcher { (response: Response) =>

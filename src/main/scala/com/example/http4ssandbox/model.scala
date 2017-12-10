@@ -1,6 +1,9 @@
 package com.example.http4ssandbox
 
+import java.time.ZonedDateTime
+
 import io.circe.{Decoder, Encoder}
+import io.circe.java8.time._
 import io.circe.generic.extras.semiauto.{deriveEnumerationDecoder, deriveEnumerationEncoder}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 
@@ -19,7 +22,7 @@ object Price {
   implicit val priceEncoder: Encoder[Price] = deriveEncoder[Price]
 }
 
-case class Offer(merchantId: Long, productId: String, price: Price)
+case class Offer(merchantId: Long, productId: String, price: Price, expires: ZonedDateTime)
 object Offer {
   implicit val offerDecoder: Decoder[Offer] = deriveDecoder[Offer]
   implicit val offerEncoder: Encoder[Offer] = deriveEncoder[Offer]
