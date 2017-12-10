@@ -15,19 +15,27 @@ class OffersSpec extends FreeSpec with Matchers with Http4sMatchers {
   "Offers" - {
     "can be created and then viewed" in new TestCase {
       forAll(offers) { offer =>
-        val postResponse = responseTo(Request(POST, uri("/offers")).withBody(offer))
-        postResponse should have(status(Status.Created), header(headers.Location))
-        responseTo(Request(GET, postResponse.headers.get(headers.Location).value.uri)) should have(status(Status.Ok),
-                                                                                                   body(offer))
+        val resp = responseTo(Request(POST, uri("/offers")).withBody(offer))
+        resp should have(status(Status.Created), header(headers.Location))
+        responseTo(Request(GET, resp.headers.get(headers.Location).value.uri)) should have(status(Status.Ok),
+                                                                                           body(offer))
       }
     }
     "can be listed" in new TestCase {
       responseTo(Request(GET, uri("/offers"))) should have(status(Status.Ok), body(json"[]"))
 
-      forAll(offers)(offer =>
-        responseTo(Request(POST, uri("/offers")).withBody(offer)) should have(status(Status.Created)))
+      val List(offer1Uri, offer2Uri, offer3Uri) = offers.map(offer =>
+        responseTo(Request(POST, uri("/offers")).withBody(offer)).headers.get(headers.Location).value.uri)
 
-      responseTo(Request(GET, uri("/offers"))) should have(status(Status.Ok), body(json"[$offer1,$offer2,$offer3]"))
+      responseTo(Request(GET, uri("/offers"))) should have(
+        status(Status.Ok),
+        body(json"""
+          [
+            { "href": $offer1Uri, "item": $offer1 },
+            { "href": $offer2Uri, "item": $offer2 },
+            { "href": $offer3Uri, "item": $offer3 }
+          ]""")
+      )
     }
   }
 

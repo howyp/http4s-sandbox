@@ -28,7 +28,14 @@ class Offers {
   var currentOffers: IndexedSeq[Offer] = IndexedSeq.empty
 
   val service = HttpService {
-    case GET -> Root / "offers"              => Ok(currentOffers.asJson)
+    case GET -> Root / "offers" =>
+      Ok(currentOffers.zipWithIndex.map {
+        case (offer, id) =>
+          Json.obj(
+            "href" -> (uri("/offers") / id.toString).asJson,
+            "item" -> offer.asJson
+          )
+      }.asJson)
     case GET -> Root / "offers" / IntVar(id) => Ok(currentOffers(id).asJson)
     case req @ POST -> Root / "offers" =>
       req.as(jsonOf[Offer]).flatMap { offer =>
