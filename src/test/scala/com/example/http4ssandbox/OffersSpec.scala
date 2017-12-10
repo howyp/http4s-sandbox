@@ -124,7 +124,10 @@ class OffersSpec extends FreeSpec with Matchers with Http4sMatchers {
     var latestClock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
     def setCurrentSystemTime(datetime: String) =
       latestClock = Clock.fixed(ZonedDateTime.parse(datetime).toInstant, ZoneOffset.UTC)
-    private val offersService: Offers = new Offers { def clock = latestClock }
+    private val offersService: Offers = new Offers {
+      def clock = latestClock
+      val repo  = new Repository
+    }
 
     def responseTo(request: Request): Response       = offersService.service.orNotFound(request).unsafeRun()
     def responseTo(request: Task[Request]): Response = request.flatMap(offersService.service.orNotFound(_)).unsafeRun()
