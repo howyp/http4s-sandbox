@@ -8,7 +8,7 @@ import org.http4s.circe._
 import org.http4s.dsl._
 import org.http4s.headers.Location
 import cats.syntax.eq._
-import cats.instances.long._
+import cats.instances.all._
 
 class Offers {
   private var nextId                         = 0
@@ -20,10 +20,13 @@ class Offers {
   }
 
   object MerchantId extends QueryParamDecoderMatcher[Long]("merchantId")
+  object ProductId  extends QueryParamDecoderMatcher[String]("productId")
 
   val service = HttpService {
     case GET -> Root / "offers" :? MerchantId(mId) =>
       Ok(currentOffers.filter(_._2.merchantId === mId).map(offerCollectionItem).asJson)
+    case GET -> Root / "offers" :? ProductId(pId) =>
+      Ok(currentOffers.filter(_._2.productId === pId).map(offerCollectionItem).asJson)
     case GET -> Root / "offers"              => Ok(currentOffers.map(offerCollectionItem).asJson)
     case GET -> Root / "offers" / IntVar(id) => currentOffers.get(id).map(o => Ok(o.asJson)).getOrElse(Gone())
     case DELETE -> Root / "offers" / IntVar(id) =>

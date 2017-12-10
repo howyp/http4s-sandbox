@@ -60,6 +60,20 @@ class OffersSpec extends FreeSpec with Matchers with Http4sMatchers {
         responseTo(Request(GET, uri("/offers") +? ("merchantId", 99999))) should have(status(Status.Ok),
                                                                                       body(json"""[]"""))
       }
+      "product ID" in new TestCase {
+        val List(offer1Uri, offer2Uri, offer3Uri) =
+          offers.map(offer => responseTo(Request(POST, uri("/offers")).withBody(offer)).headers.get(Location).value.uri)
+        responseTo(Request(GET, uri("/offers") +? ("productId", "BNT93876"))) should have(
+          status(Status.Ok),
+          body(json"""
+          [
+            { "href": $offer2Uri, "item": $offer2 },
+            { "href": $offer3Uri, "item": $offer3 }
+          ]""")
+        )
+        responseTo(Request(GET, uri("/offers") +? ("productId", 99999))) should have(status(Status.Ok),
+                                                                                     body(json"""[]"""))
+      }
     }
   }
 
@@ -85,7 +99,7 @@ class OffersSpec extends FreeSpec with Matchers with Http4sMatchers {
         {
           "merchantId": 1234,
           "price": { "currency": "GBP", "amount": 12.23 },
-          "productId": "27365CV"
+          "productId": "BNT93876"
         }
       """
     )
