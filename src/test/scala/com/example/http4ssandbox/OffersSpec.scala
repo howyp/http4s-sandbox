@@ -38,12 +38,12 @@ class OffersSpec extends FreeSpec with Matchers with Http4sMatchers {
       )
     }
     "can be cancelled" in new TestCase {
-      {
-        val offer    = offer1
+      forAll(offers) { offer =>
         val offerUri = responseTo(Request(POST, uri("/offers")).withBody(offer)).headers.get(Location).value.uri
         responseTo(Request(DELETE, offerUri)) should have(status(Status.NoContent), noBody)
         responseTo(Request(GET, offerUri)) should have(status(Status.Gone), noBody)
       }
+      responseTo(Request(GET, uri("/offers"))) should have(status(Status.Ok), body(json"[]"))
     }
   }
 
