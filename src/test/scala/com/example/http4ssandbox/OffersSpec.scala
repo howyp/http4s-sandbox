@@ -13,15 +13,15 @@ import org.scalatest.Inspectors._
 import org.scalatest.{FreeSpec, Matchers}
 
 class OffersSpec extends FreeSpec with Matchers with Http4sMatchers {
-  "Offers" - {
-    "can be created and then viewed" in new TestCase {
+  "Offers can be" - {
+    "created and then viewed" in new TestCase {
       forAll(offers) { offer =>
         val resp = responseTo(Request(POST, uri("/offers")).withBody(offer))
         resp should have(status(Status.Created), header(Location), noBody)
         responseTo(Request(GET, resp.headers.get(Location).value.uri)) should have(status(Status.Ok), body(offer))
       }
     }
-    "can be listed" in new TestCase {
+    "listed" in new TestCase {
       responseTo(Request(GET, uri("/offers"))) should have(status(Status.Ok), body(json"[]"))
 
       val List(offer1Uri, offer2Uri, offer3Uri) =
@@ -37,13 +37,29 @@ class OffersSpec extends FreeSpec with Matchers with Http4sMatchers {
           ]""")
       )
     }
-    "can be cancelled" in new TestCase {
+    "cancelled" in new TestCase {
       forAll(offers) { offer =>
         val offerUri = responseTo(Request(POST, uri("/offers")).withBody(offer)).headers.get(Location).value.uri
         responseTo(Request(DELETE, offerUri)) should have(status(Status.NoContent), noBody)
         responseTo(Request(GET, offerUri)) should have(status(Status.Gone), noBody)
       }
       responseTo(Request(GET, uri("/offers"))) should have(status(Status.Ok), body(json"[]"))
+    }
+    "queried by" - {
+      "merchant ID" in new TestCase {
+        val List(offer1Uri, offer2Uri, offer3Uri) =
+          offers.map(offer => responseTo(Request(POST, uri("/offers")).withBody(offer)).headers.get(Location).value.uri)
+        responseTo(Request(GET, uri("/offers") +? ("merchantId", 1234))) should have(
+          status(Status.Ok),
+          body(json"""
+          [
+            { "href": $offer1Uri, "item": $offer1 },
+            { "href": $offer3Uri, "item": $offer3 }
+          ]""")
+        )
+        responseTo(Request(GET, uri("/offers") +? ("merchantId", 99999))) should have(status(Status.Ok),
+                                                                                      body(json"""[]"""))
+      }
     }
   }
 
@@ -67,7 +83,7 @@ class OffersSpec extends FreeSpec with Matchers with Http4sMatchers {
       """,
       json"""
         {
-          "merchantId": 9999,
+          "merchantId": 1234,
           "price": { "currency": "GBP", "amount": 12.23 },
           "productId": "27365CV"
         }
