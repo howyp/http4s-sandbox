@@ -11,21 +11,6 @@ import org.http4s.dsl._
 import org.http4s.headers.Location
 
 class Offers {
-  sealed trait Currency
-  object Currency {
-    case object GBP extends Currency
-    case object USD extends Currency
-  }
-  case class Price(currency: Currency, amount: BigDecimal)
-  case class Offer(merchantId: Long, productId: String, price: Price)
-
-  implicit val currencyAmountDecoder: Decoder[Currency] = deriveEnumerationDecoder[Currency]
-  implicit val currencyAmountEncoder: Encoder[Currency] = deriveEnumerationEncoder[Currency]
-  implicit val priceDecoder: Decoder[Price]             = deriveDecoder[Price]
-  implicit val priceEncoder: Encoder[Price]             = deriveEncoder[Price]
-  implicit val offerDecoder: Decoder[Offer]             = deriveDecoder[Offer]
-  implicit val offerEncoder: Encoder[Offer]             = deriveEncoder[Offer]
-
   var currentOffers: IndexedSeq[Offer] = IndexedSeq.empty
 
   val service = HttpService {
