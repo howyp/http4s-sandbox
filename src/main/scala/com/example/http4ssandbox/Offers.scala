@@ -1,5 +1,7 @@
 package com.example.http4ssandbox
 
+import java.util.UUID
+
 import fs2.Task
 import io.circe._
 import io.circe.syntax._
@@ -11,14 +13,15 @@ import cats.syntax.eq._
 import cats.instances.all._
 
 class Offers {
-  private var nextId                         = 0
-  private var currentOffers: Map[Int, Offer] = Map.empty
+  private type OfferId = UUID
+  private var currentOffers: Map[OfferId, Offer] = Map.empty
 
-  private def offerUri(id: Int) = uri("/offers") / id.toString
-  private val offerCollectionItem: ((Int, Offer)) => Json = {
+  private def offerUri(id: OfferId) = uri("/offers") / id.toString
+  private val offerCollectionItem: ((OfferId, Offer)) => Json = {
     case (id, offer) => Json.obj("href" -> offerUri(id).asJson, "item" -> offer.asJson)
   }
-  private def orderMatches(maybeMerchantId: Option[Long], maybeProductId: Option[String]): ((Int, Offer)) => Boolean = {
+  private def orderMatches(maybeMerchantId: Option[Long],
+                           maybeProductId: Option[String]): ((OfferId, Offer)) => Boolean = {
     case (_, offer) =>
       maybeMerchantId.forall(_ === offer.merchantId) &&
         maybeProductId.forall(_ === offer.productId)
@@ -30,14 +33,13 @@ class Offers {
   val service = HttpService {
     case GET -> Root / "offers" :? MerchantId(merchant) +& ProductId(product) =>
       Ok(currentOffers.filter(orderMatches(merchant, product)).map(offerCollectionItem).asJson)
-    case GET -> Root / "offers" / IntVar(id) => currentOffers.get(id).map(o => Ok(o.asJson)).getOrElse(Gone())
-    case DELETE -> Root / "offers" / IntVar(id) =>
-      currentOffers = currentOffers - id
+    case GET -> Root / "offers" / id => currentOffers.get(UUID.fromString(id)).map(o => Ok(o.asJson)).getOrElse(Gone())
+    case DELETE -> Root / "offers" / id =>
+      currentOffers = currentOffers - UUID.fromString(id)
       NoContent()
     case req @ POST -> Root / "offers" =>
       req.as(jsonOf[Offer]).flatMap { offer =>
-        nextId += 1
-        val id = nextId
+        val id = UUID.randomUUID()
         currentOffers = currentOffers + (id -> offer)
         Task.now(Response(Created, headers = Headers(Location(offerUri(id)))))
       }
