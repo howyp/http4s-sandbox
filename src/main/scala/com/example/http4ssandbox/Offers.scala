@@ -13,6 +13,8 @@ import org.http4s.headers.Location
 import cats.syntax.eq._
 import cats.instances.all._
 
+import scala.util.Try
+
 trait Offers {
   def clock: Clock
 
@@ -36,14 +38,14 @@ trait Offers {
   val service = HttpService {
     case GET -> Root / "offers" :? MerchantId(merchant) +& ProductId(product) =>
       Ok(currentOffers.filter(orderMatches(merchant, product)).map(offerCollectionItem).asJson)
-    case GET -> Root / "offers" / id =>
+    case GET -> Root / "offers" / UUIDPath(id) =>
       currentOffers
-        .get(UUID.fromString(id))
+        .get(id)
         .filterNot(_.expires.toInstant isBefore clock.instant())
         .map(o => Ok(o.asJson))
         .getOrElse(Gone())
-    case DELETE -> Root / "offers" / id =>
-      currentOffers = currentOffers - UUID.fromString(id)
+    case DELETE -> Root / "offers" / UUIDPath(id) =>
+      currentOffers = currentOffers - id
       NoContent()
     case req @ POST -> Root / "offers" =>
       req.as(jsonOf[Offer]).flatMap { offer =>
@@ -55,4 +57,7 @@ trait Offers {
 }
 object Offers extends Offers {
   val clock = Clock.systemUTC()
+}
+object UUIDPath {
+  def unapply(str: String): Option[UUID] = Try(UUID.fromString(str)).toOption
 }
