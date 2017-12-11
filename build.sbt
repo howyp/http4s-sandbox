@@ -7,7 +7,6 @@ scalaVersion := "2.12.4"
 
 val CirceVersion   = "0.8.0"
 val Http4sVersion  = "0.17.5"
-val Specs2Version  = "4.0.0"
 val LogbackVersion = "1.2.3"
 
 libraryDependencies ++= Seq(
