@@ -30,15 +30,16 @@ trait Service {
       Ok(repo.find(merchant, product).asJson(collectionWithHref(offerUri)))
 
     case req @ POST -> Root / Offers =>
-      req.as(jsonOf[Offer]).map { offer =>
+      req.as(jsonOf[Offer.Valid]).map { offer =>
         val id = repo.insert(offer)
         Response(Created, headers = Headers(Location(offerUri(id))))
       }
 
     case GET -> Root / Offers / UUIDPath(id) =>
       repo.find(id, expiresAfter = clock.instant()) match {
-        case Some(offer) => Ok(offer.asJson)
-        case None        => Gone()
+        case Some(offer: Offer.Valid)              => Ok(offer.asJson)
+        case Some(Offer.Expired | Offer.Cancelled) => Gone()
+        case None                                  => NotFound()
       }
 
     case DELETE -> Root / Offers / UUIDPath(id) =>

@@ -12,8 +12,8 @@ object Codecs {
   implicit val currencyAmountDecoder: Decoder[Currency] = deriveEnumerationDecoder[Currency]
   implicit val currencyAmountEncoder: Encoder[Currency] = deriveEnumerationEncoder[Currency]
 
-  implicit val offerDecoder: Decoder[Offer] = deriveDecoder[Offer]
-  implicit val offerEncoder: Encoder[Offer] = deriveEncoder[Offer]
+  implicit val offerDecoder: Decoder[Offer.Valid] = deriveDecoder[Offer.Valid]
+  implicit val offerEncoder: Encoder[Offer.Valid] = deriveEncoder[Offer.Valid]
 
   def collectionWithHref[Key, Item](uri: Key => Uri)(implicit keyEnc: Encoder[Uri],
                                                      itemEnc: Encoder[Item]): Encoder[Map[Key, Item]] =

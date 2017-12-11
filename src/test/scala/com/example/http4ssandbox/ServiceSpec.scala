@@ -1,6 +1,7 @@
 package com.example.http4ssandbox
 
 import java.time.{Clock, Instant, ZoneOffset, ZonedDateTime}
+import java.util.UUID
 
 import com.example.http4ssandbox.test.Http4sMatchers
 import fs2.Task
@@ -15,41 +16,42 @@ import org.scalatest.Inspectors._
 import org.scalatest.{FreeSpec, Matchers}
 
 class ServiceSpec extends FreeSpec with Matchers with Http4sMatchers {
-  "Offers can be" - {
-    "created and then viewed" in new TestCase {
-      forAll(offers) { offer =>
-        val resp = responseTo(Request(POST, uri("/offers")).withBody(offer))
-        resp should have(status(Status.Created), header(Location), noBody)
-        responseTo(Request(GET, resp.headers.get(Location).value.uri)) should have(status(Status.Ok), body(offer))
+  "Offers" - {
+    "can be" - {
+      "created and then viewed" in new TestCase {
+        forAll(offers) { offer =>
+          val resp = responseTo(Request(POST, uri("/offers")).withBody(offer))
+          resp should have(status(Status.Created), header(Location), noBody)
+          responseTo(Request(GET, resp.headers.get(Location).value.uri)) should have(status(Status.Ok), body(offer))
+        }
       }
-    }
-    "listed" in new TestCase {
-      responseTo(Request(GET, uri("/offers"))) should have(status(Status.Ok), body(json"[]"))
+      "listed" in new TestCase {
+        responseTo(Request(GET, uri("/offers"))) should have(status(Status.Ok), body(json"[]"))
 
-      val List(offer1Uri, offer2Uri, offer3Uri) =
-        offers.map(offer => responseTo(Request(POST, uri("/offers")).withBody(offer)).headers.get(Location).value.uri)
+        val List(offer1Uri, offer2Uri, offer3Uri) =
+          offers.map(offer => responseTo(Request(POST, uri("/offers")).withBody(offer)).headers.get(Location).value.uri)
 
-      responseTo(Request(GET, uri("/offers"))) should have(
-        status(Status.Ok),
-        body(json"""
+        responseTo(Request(GET, uri("/offers"))) should have(
+          status(Status.Ok),
+          body(json"""
           [
             { "href": $offer1Uri, "item": $offer1 },
             { "href": $offer2Uri, "item": $offer2 },
             { "href": $offer3Uri, "item": $offer3 }
           ]""")
-      )
-    }
-    "cancelled" in new TestCase {
-      forAll(offers) { offer =>
-        val offerUri = responseTo(Request(POST, uri("/offers")).withBody(offer)).headers.get(Location).value.uri
-        responseTo(Request(DELETE, offerUri)) should have(status(Status.NoContent), noBody)
-        responseTo(Request(GET, offerUri)) should have(status(Status.Gone), noBody)
+        )
       }
-      responseTo(Request(GET, uri("/offers"))) should have(status(Status.Ok), body(json"[]"))
-    }
-    "expired after a given time" in new TestCase {
-      setCurrentSystemTime("2017-12-01T00:00:00Z")
-      val offerWithExpiryTime = json"""
+      "cancelled" in new TestCase {
+        forAll(offers) { offer =>
+          val offerUri = responseTo(Request(POST, uri("/offers")).withBody(offer)).headers.get(Location).value.uri
+          responseTo(Request(DELETE, offerUri)) should have(status(Status.NoContent), noBody)
+          responseTo(Request(GET, offerUri)) should have(status(Status.Gone), noBody)
+        }
+        responseTo(Request(GET, uri("/offers"))) should have(status(Status.Ok), body(json"[]"))
+      }
+      "expired after a given time" in new TestCase {
+        setCurrentSystemTime("2017-12-01T00:00:00Z")
+        val offerWithExpiryTime = json"""
         {
           "merchantId": 1234,
           "price": { "currency": "GBP", "amount": 503762 },
@@ -57,39 +59,43 @@ class ServiceSpec extends FreeSpec with Matchers with Http4sMatchers {
           "expires": "2017-12-24T23:59:59Z"
         }
       """
-      val offerUri =
-        responseTo(Request(POST, uri("/offers")).withBody(offerWithExpiryTime)).headers.get(Location).value.uri
+        val offerUri =
+          responseTo(Request(POST, uri("/offers")).withBody(offerWithExpiryTime)).headers.get(Location).value.uri
 
-      setCurrentSystemTime("2017-12-24T23:59:59Z")
-      responseTo(Request(GET, offerUri)) should have(status(Status.Ok), body(offerWithExpiryTime))
-      setCurrentSystemTime("2017-12-25T00:00:00Z")
-      responseTo(Request(GET, offerUri)) should have(status(Status.Gone), noBody)
+        setCurrentSystemTime("2017-12-24T23:59:59Z")
+        responseTo(Request(GET, offerUri)) should have(status(Status.Ok), body(offerWithExpiryTime))
+        setCurrentSystemTime("2017-12-25T00:00:00Z")
+        responseTo(Request(GET, offerUri)) should have(status(Status.Gone), noBody)
+      }
+      "queried by" - {
+        "merchant ID" in new TestCase with PreCreatedOffers {
+          responseTo(Request(GET, uri("/offers") +? ("merchantId", 1234))) should have(
+            status(Status.Ok),
+            body(json""" [ { "href": $offer1Uri, "item": $offer1 }, { "href": $offer3Uri, "item": $offer3 } ]""")
+          )
+          responseTo(Request(GET, uri("/offers") +? ("merchantId", 99999))) should have(status(Status.Ok),
+                                                                                        body(json"""[]"""))
+        }
+        "product ID" in new TestCase with PreCreatedOffers {
+          responseTo(Request(GET, uri("/offers") +? ("productId", "BNT93876"))) should have(
+            status(Status.Ok),
+            body(json""" [ { "href": $offer2Uri, "item": $offer2 }, { "href": $offer3Uri, "item": $offer3 } ]""")
+          )
+          responseTo(Request(GET, uri("/offers") +? ("productId", 99999))) should have(status(Status.Ok),
+                                                                                       body(json"""[]"""))
+        }
+        "merchant ID and product ID" in new TestCase with PreCreatedOffers {
+          responseTo(Request(GET, uri("/offers") +? ("merchantId", 1234) +? ("productId", "BNT93876"))) should have(
+            status(Status.Ok),
+            body(json""" [ { "href": $offer3Uri, "item": $offer3 } ]""")
+          )
+          responseTo(Request(GET, uri("/offers") +? ("productId", 99999))) should have(status(Status.Ok),
+                                                                                       body(json"""[]"""))
+        }
+      }
     }
-    "queried by" - {
-      "merchant ID" in new TestCase with PreCreatedOffers {
-        responseTo(Request(GET, uri("/offers") +? ("merchantId", 1234))) should have(
-          status(Status.Ok),
-          body(json""" [ { "href": $offer1Uri, "item": $offer1 }, { "href": $offer3Uri, "item": $offer3 } ]""")
-        )
-        responseTo(Request(GET, uri("/offers") +? ("merchantId", 99999))) should have(status(Status.Ok),
-                                                                                      body(json"""[]"""))
-      }
-      "product ID" in new TestCase with PreCreatedOffers {
-        responseTo(Request(GET, uri("/offers") +? ("productId", "BNT93876"))) should have(
-          status(Status.Ok),
-          body(json""" [ { "href": $offer2Uri, "item": $offer2 }, { "href": $offer3Uri, "item": $offer3 } ]""")
-        )
-        responseTo(Request(GET, uri("/offers") +? ("productId", 99999))) should have(status(Status.Ok),
-                                                                                     body(json"""[]"""))
-      }
-      "merchant ID and product ID" in new TestCase with PreCreatedOffers {
-        responseTo(Request(GET, uri("/offers") +? ("merchantId", 1234) +? ("productId", "BNT93876"))) should have(
-          status(Status.Ok),
-          body(json""" [ { "href": $offer3Uri, "item": $offer3 } ]""")
-        )
-        responseTo(Request(GET, uri("/offers") +? ("productId", 99999))) should have(status(Status.Ok),
-                                                                                     body(json"""[]"""))
-      }
+    "that are non-existent return NotFound" in new TestCase with PreCreatedOffers {
+      responseTo(Request(GET, uri("/offers") / UUID.randomUUID().toString)) should have(status(Status.NotFound), noBody)
     }
   }
 

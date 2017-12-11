@@ -8,26 +8,29 @@ import cats.instances.all._
 class Repository {
   type ID = UUID
 
-  private var currentOffers: Map[ID, Offer] = Map.empty
+  private var currentOffers: Map[ID, Option[Offer.Valid]] = Map.empty
 
-  def find(merchant: Option[Long], product: Option[String]): Map[ID, Offer] =
-    currentOffers.filter(orderMatches(merchant, product))
+  def find(merchant: Option[Long], product: Option[String]): Map[ID, Offer.Valid] =
+    currentOffers.collect {
+      case (id, Some(offer))
+          if merchant.forall(_ === offer.merchantId) &&
+            product.forall(_ === offer.productId) =>
+        id -> offer
+    }
 
   def find(id: ID, expiresAfter: Instant): Option[Offer] =
-    currentOffers.get(id).filterNot(_.expires.toInstant isBefore expiresAfter)
+    currentOffers.get(id).map {
+      case None                                                         => Offer.Cancelled
+      case Some(offer) if offer.expires.toInstant isBefore expiresAfter => Offer.Expired
+      case Some(offer)                                                  => offer
+    }
 
   def cancel(id: ID): Unit =
-    currentOffers = currentOffers - id
+    currentOffers = currentOffers + (id -> None)
 
-  def insert(offer: Offer): ID = {
+  def insert(offer: Offer.Valid): ID = {
     val id = UUID.randomUUID()
-    currentOffers = currentOffers + (id -> offer)
+    currentOffers = currentOffers + (id -> Some(offer))
     id
-  }
-
-  protected def orderMatches(maybeMerchantId: Option[Long], maybeProductId: Option[String]): ((ID, Offer)) => Boolean = {
-    case (_, offer) =>
-      maybeMerchantId.forall(_ === offer.merchantId) &&
-        maybeProductId.forall(_ === offer.productId)
   }
 }
