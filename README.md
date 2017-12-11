@@ -1,13 +1,15 @@
 scala-merchant-demo
 ===================
 
+[![Build Status](https://travis-ci.org/howyp/scala-merchant-demo.svg?branch=master)](https://travis-ci.org/howyp/scala-merchant-demo)
+
 Demo project showing how to build a REST service using Scala, http4s and Circe.
 
 Building
 --------
 To build, test and then run the service, use:
 
-```scala
+```
 sbt clean test run
 ```
 
