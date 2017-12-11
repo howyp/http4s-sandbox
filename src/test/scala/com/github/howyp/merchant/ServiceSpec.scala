@@ -16,7 +16,7 @@ import org.scalatest.Inspectors._
 import org.scalatest.OptionValues._
 import org.scalatest.{FreeSpec, Matchers}
 
-class erviceSpec extends FreeSpec with Matchers with Http4sMatchers {
+class ServiceSpec extends FreeSpec with Matchers with Http4sMatchers {
   "Offers" - {
     "can be" - {
       "created and then viewed" in new TestCase {
