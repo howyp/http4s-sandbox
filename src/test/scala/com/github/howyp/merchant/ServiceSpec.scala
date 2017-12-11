@@ -1,9 +1,10 @@
-package com.example.http4ssandbox
+package com.github.howyp.merchant
 
 import java.time.{Clock, Instant, ZoneOffset, ZonedDateTime}
 import java.util.UUID
 
-import com.example.http4ssandbox.test.Http4sMatchers
+import com.github.howyp.merchant
+import com.github.howyp.merchant.test.Http4sMatchers
 import fs2.Task
 import io.circe.literal._
 import org.http4s.Method.{DELETE, GET, POST}
@@ -11,11 +12,11 @@ import org.http4s._
 import org.http4s.circe._
 import org.http4s.dsl._
 import org.http4s.headers.Location
-import org.scalatest.OptionValues._
 import org.scalatest.Inspectors._
+import org.scalatest.OptionValues._
 import org.scalatest.{FreeSpec, Matchers}
 
-class ServiceSpec extends FreeSpec with Matchers with Http4sMatchers {
+class erviceSpec extends FreeSpec with Matchers with Http4sMatchers {
   "Offers" - {
     "can be" - {
       "created and then viewed" in new TestCase {
@@ -130,7 +131,7 @@ class ServiceSpec extends FreeSpec with Matchers with Http4sMatchers {
     var latestClock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
     def setCurrentSystemTime(datetime: String) =
       latestClock = Clock.fixed(ZonedDateTime.parse(datetime).toInstant, ZoneOffset.UTC)
-    private val offersService: Service = new Service {
+    private val offersService: merchant.Service = new merchant.Service {
       def clock = latestClock
       val repo  = new Repository
     }

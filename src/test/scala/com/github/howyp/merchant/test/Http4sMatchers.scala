@@ -1,7 +1,5 @@
-package com.example.http4ssandbox.test
+package com.github.howyp.merchant.test
 
-import fs2.Task
-import cats.instances.all._
 import cats.syntax.eq._
 import io.circe.Json
 import org.http4s._

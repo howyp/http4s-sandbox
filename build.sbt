@@ -1,7 +1,7 @@
 import sbt.Keys.libraryDependencies
 
-organization := "com.example"
-name := "http4s-sandbox"
+organization := "com.github.howyp"
+name := "scala-merchant-demo"
 version := "0.0.1-SNAPSHOT"
 scalaVersion := "2.12.4"
 

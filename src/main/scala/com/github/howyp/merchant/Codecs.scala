@@ -1,4 +1,4 @@
-package com.example.http4ssandbox
+package com.github.howyp.merchant
 
 import io.circe.{Decoder, Encoder, Json}
 import io.circe.syntax._

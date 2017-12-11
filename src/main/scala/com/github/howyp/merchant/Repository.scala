@@ -1,9 +1,10 @@
-package com.example.http4ssandbox
+package com.github.howyp.merchant
 
 import java.time.Instant
 import java.util.UUID
-import cats.syntax.eq._
+
 import cats.instances.all._
+import cats.syntax.eq._
 
 class Repository {
   type ID = UUID

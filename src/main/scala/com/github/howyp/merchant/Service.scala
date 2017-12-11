@@ -1,9 +1,8 @@
-package com.example.http4ssandbox
+package com.github.howyp.merchant
 
 import java.time.Clock
 import java.util.UUID
 
-import io.circe._
 import io.circe.syntax._
 import org.http4s._
 import org.http4s.circe._
