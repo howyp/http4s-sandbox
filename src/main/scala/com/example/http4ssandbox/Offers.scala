@@ -10,6 +10,8 @@ import org.http4s._
 import org.http4s.circe._
 import org.http4s.dsl._
 import org.http4s.headers.Location
+import org.http4s.server.blaze.BlazeBuilder
+import org.http4s.util.StreamApp
 
 import scala.util.Try
 
@@ -46,9 +48,15 @@ trait Offers {
       NoContent()
   }
 }
-object Offers extends Offers {
+object Offers extends Offers with StreamApp {
   val clock = Clock.systemUTC()
   val repo  = new Repository()
+
+  def stream(args: List[String]): fs2.Stream[Task, Nothing] =
+    BlazeBuilder
+      .bindHttp(8080)
+      .mountService(Offers.service, "/")
+      .serve
 }
 object UUIDPath {
   def unapply(str: String): Option[UUID] = Try(UUID.fromString(str)).toOption
