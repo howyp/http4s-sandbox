@@ -28,19 +28,22 @@ trait Offers {
   val service = HttpService {
     case GET -> Root / "offers" :? MerchantId(merchant) +& ProductId(product) =>
       Ok(repo.find(merchant, product).map(offerCollectionItem).asJson)
+
+    case req @ POST -> Root / "offers" =>
+      req.as(jsonOf[Offer]).map { offer =>
+        val id = repo.insert(offer)
+        Response(Created, headers = Headers(Location(offerUri(id))))
+      }
+
     case GET -> Root / "offers" / UUIDPath(id) =>
       repo.find(id, expiresAfter = clock.instant()) match {
         case Some(offer) => Ok(offer.asJson)
         case None        => Gone()
       }
+
     case DELETE -> Root / "offers" / UUIDPath(id) =>
       repo.cancel(id)
       NoContent()
-    case req @ POST -> Root / "offers" =>
-      req.as(jsonOf[Offer]).flatMap { offer =>
-        val id = repo.insert(offer)
-        Task.now(Response(Created, headers = Headers(Location(offerUri(id)))))
-      }
   }
 }
 object Offers extends Offers {
