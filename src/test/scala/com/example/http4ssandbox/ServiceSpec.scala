@@ -14,7 +14,7 @@ import org.scalatest.OptionValues._
 import org.scalatest.Inspectors._
 import org.scalatest.{FreeSpec, Matchers}
 
-class OffersSpec extends FreeSpec with Matchers with Http4sMatchers {
+class ServiceSpec extends FreeSpec with Matchers with Http4sMatchers {
   "Offers can be" - {
     "created and then viewed" in new TestCase {
       forAll(offers) { offer =>
@@ -124,7 +124,7 @@ class OffersSpec extends FreeSpec with Matchers with Http4sMatchers {
     var latestClock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
     def setCurrentSystemTime(datetime: String) =
       latestClock = Clock.fixed(ZonedDateTime.parse(datetime).toInstant, ZoneOffset.UTC)
-    private val offersService: Offers = new Offers {
+    private val offersService: Service = new Service {
       def clock = latestClock
       val repo  = new Repository
     }
