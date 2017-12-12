@@ -1,0 +1,6 @@
+{
+  "merchantId": 1234,
+  "price": { "currency": "GBP", "amount": 503762 },
+  "productId": "AM039827X",
+  "expires": "2099-01-01T00:00:00Z"
+}
