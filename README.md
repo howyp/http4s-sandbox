@@ -6,8 +6,7 @@ scala-merchant-demo
 Demo project showing how to build a REST service using Scala, http4s and Circe.
 
 
-About
------
+## About
 The service demonstrates a RESTful API which allows merchants to query for and create simple 'offers'. An offer has the following format:
 ```json
 {
@@ -18,6 +17,8 @@ The service demonstrates a RESTful API which allows merchants to query for and c
 }
 ```
 
+#### API
+
 The full API is described in `ServiceSpec`. I have assumed that this should be a demo focusing on the REST aspects of the API, so it does not handle the following concerns:
 - Persistence of offers between service restarts or multiple service instances
 - Concurrent creation/cancellation of offers
@@ -25,17 +26,21 @@ The full API is described in `ServiceSpec`. I have assumed that this should be a
 - Authorisation/Authentication
 - Detailed definition of the offer format, or related entites such as the Product or Merchant. For instance, once these other entities are defined, it may be better to refer to them via URI rather than ID.
 
+#### Test Strategy
+
 The test strategy used is to have a single end-to-end integration test of the service, as it is not yet of the scale where individual unit tests are valuable to prove specific internal functional aspects of the code base. This is facilitated by the fact that http4s services are represented a pure functions (so quick/simple to test) and that Circe provides excellent handling of JSON literals, allowing JSON to be directly stated in the test inputs/outputs without loss of clarity of the itent.
 
-Building
---------
+## Building
 To build, test and then run the service, use:
 
 ```
 sbt clean test run
 ```
 
-The service runs on port 8080. Offers can be queried and created at `/offers`:
+The service runs on port 8080.
+
+#### Example Session
+Offers can be queried and created at `/offers`:
 
 ```
 $ curl -v http://localhost:8080/offers
